@@ -9,6 +9,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
@@ -28,6 +29,7 @@ public class GameScreen implements Screen {
     private SpriteBatch batch;
     private World world;
     Player player;
+
     TextureAtlas atlas;
 
     OrthographicCamera camera;
@@ -37,10 +39,18 @@ public class GameScreen implements Screen {
     private MyContactListener cl;
     private float accelx=0;
 
+    /** Textures **/
+    private TextureRegion currentPlayerFrame;
+
+    /** Animations **/
+    private Animation walkLeftAnimation;
+    private Animation walkRightAnimation;
+    private static final float RUNNING_FRAME_DURATION = 0.06f;
 
     //constructor
     public GameScreen(BlockBunnyGame myGame){
         game = myGame;
+        batch = new SpriteBatch();
 
         //create the world
         //x and y forces, then inactive bodies should "sleep" (true)
@@ -65,6 +75,12 @@ public class GameScreen implements Screen {
         //set up box2dcam
         box2DCam = new OrthographicCamera();
         box2DCam.setToOrtho(false, BlockBunnyGame.SCREEN_WIDTH / Box2DVars.PPM, BlockBunnyGame.SCREEN_HEIGHT / Box2DVars.PPM);
+
+        //set up animation
+        TextureAtlas atlas = new TextureAtlas(Gdx.files.internal("assets/textures/golbez.txt"));
+        walkLeftAnimation = new Animation(RUNNING_FRAME_DURATION,atlas.findRegions("golbezleft"));
+        walkRightAnimation = new Animation(RUNNING_FRAME_DURATION,atlas.findRegions("golbezright"));
+
     }
 
     public void update(float delta) {
@@ -83,6 +99,26 @@ public class GameScreen implements Screen {
         //update the world
         update(delta);
 
+        //update the player
+        player.update(delta);
+
+        //render the player
+        batch.begin();
+
+        //if player is not walking, we just give the first frame of facing right or left. Otherwise, we cycle through
+        if(player.getIsWalking()) {
+            currentPlayerFrame = player.isFacingLeft() ? walkLeftAnimation.getKeyFrame(player.getStateTime(), true) : walkRightAnimation.getKeyFrame(player.getStateTime(), true);
+        }
+        else{
+            currentPlayerFrame = player.isFacingLeft() ? walkLeftAnimation.getKeyFrame(0,true) : walkRightAnimation.getKeyFrame(0,true);
+        }
+        batch.draw(currentPlayerFrame,
+                player.getBody().getPosition().x * Box2DVars.PPM - Player.WIDTH /2,
+                player.getBody().getPosition().y * Box2DVars.PPM -Player.HEIGHT/2,
+                player.WIDTH,
+                player.HEIGHT);
+
+        batch.end();
 
         //draw box2d world
         if(debug) {
@@ -120,6 +156,16 @@ public class GameScreen implements Screen {
         //handle accelerometer input
         accelx = Gdx.input.getAccelerometerY();
         player.getBody().applyForceToCenter(accelx*3,0,true);
+        //set player direction
+        if(accelx !=0) {
+            if (accelx < 0) {
+                player.facingLeft = true;
+
+            } else {
+                player.facingLeft = false;
+
+            }
+        }
 
         //playerJump
         if (MyInput.isPressed(MyInput.BUTTON1)) {
@@ -137,10 +183,21 @@ public class GameScreen implements Screen {
 
         if (MyInput.isDown(MyInput.BUTTON3)) {
             player.getBody().applyForceToCenter(10,0,true);
+            player.facingLeft = false;
+
         }
 
         if (MyInput.isDown(MyInput.BUTTON4)) {
             player.getBody().applyForceToCenter(-10,0,true);
+            player.facingLeft = true;
+        }
+
+        //if player is on the ground and moving left or right, then set walking to true
+        if((cl.isPlayerOnGround()) && Math.abs(player.getBody().getLinearVelocity().x)>0){
+            player.isWalking = true;
+        }
+        else{
+            player.isWalking = false;
         }
 
 
@@ -161,7 +218,7 @@ public class GameScreen implements Screen {
 
         //define platform body
         BodyDef bdef = new BodyDef();
-        bdef.position.set(300 / Box2DVars.PPM, 120 / Box2DVars.PPM);
+        bdef.position.set((game.SCREEN_WIDTH / Box2DVars.PPM)/2, 120 / Box2DVars.PPM);
         bdef.type = BodyDef.BodyType.StaticBody;
 
         //create body
@@ -169,7 +226,7 @@ public class GameScreen implements Screen {
 
         //define Fixture
         PolygonShape shape = new PolygonShape();
-        shape.setAsBox(250 / Box2DVars.PPM, 5 / Box2DVars.PPM);
+        shape.setAsBox((game.SCREEN_WIDTH / Box2DVars.PPM) /2, 5 / Box2DVars.PPM);
         FixtureDef fdef = new FixtureDef();
         fdef.shape = shape;
         fdef.friction = 1;
@@ -194,7 +251,7 @@ public class GameScreen implements Screen {
 
         //define Fixture
         PolygonShape shape = new PolygonShape();
-        shape.setAsBox(13 / Box2DVars.PPM, 13 / Box2DVars.PPM);
+        shape.setAsBox((Player.WIDTH / Box2DVars.PPM)/2, (Player.HEIGHT / Box2DVars.PPM)/2);
         FixtureDef fdef = new FixtureDef();
         fdef.shape = shape;
         //fdef.restitution = 0.7f;//1= perfectly bouncy 0 = not at all bouncy
@@ -204,20 +261,21 @@ public class GameScreen implements Screen {
         //create fixture
         body.createFixture(fdef).setUserData("box");
 
+        //create player
+        player = new Player(body);
+        body.setUserData(player);//used to provide reference later
 
         //create foot sensor
-        shape.setAsBox(13 / Box2DVars.PPM, 13 / Box2DVars.PPM, new Vector2(0, -5 / Box2DVars.PPM), 0);//set the box down
+        shape.setAsBox(13 / Box2DVars.PPM, 13 / Box2DVars.PPM, new Vector2(0, -Player.HEIGHT/2 / Box2DVars.PPM), 0);//set the box down
         fdef.shape = shape;
         //fdef.filter.categoryBits = BIT_PLAYER;
         //fdef.filter.maskBits = BIT_BLUE;
         fdef.isSensor = true;//make the foot go through ground for easier contact determining
         body.createFixture(fdef).setUserData("foot");
+
+
+
         shape.dispose();
-
-
-        //create player
-        player = new Player(body);
-        body.setUserData(player);//used to provide reference later
 
     }
 
