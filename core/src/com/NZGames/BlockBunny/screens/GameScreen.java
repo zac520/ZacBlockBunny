@@ -35,7 +35,7 @@ public class GameScreen implements Screen {
 
     Box2DDebugRenderer box2DRenderer;
     private MyContactListener cl;
-
+    private float accelx=0;
 
 
     //constructor
@@ -117,12 +117,16 @@ public class GameScreen implements Screen {
 
     public void handleInput() {
 
+        //handle accelerometer input
+        accelx = Gdx.input.getAccelerometerY();
+        player.getBody().applyForceToCenter(accelx*3,0,true);
+
         //playerJump
         if (MyInput.isPressed(MyInput.BUTTON1)) {
             //System.out.println("pressed Z");
             if (cl.isPlayerOnGround()) {
                 //force is in newtons
-                player.getBody().applyForceToCenter(0, 250, true);
+                player.getBody().applyForceToCenter(0, 100, true);
             }
         }
         //switch block color
