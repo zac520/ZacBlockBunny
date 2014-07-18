@@ -12,7 +12,7 @@ public class Player {
     public static final float      HEIGHT = 40;
     public static final float      WIDTH = 30;
     float           stateTime = 0;
-
+    int             crystalCount = 0;
 
 
     public Player(Body body){
@@ -36,5 +36,8 @@ public class Player {
 
     public float getStateTime(){
         return stateTime;
+    }
+    public void collectCrystal(){
+        this.crystalCount++;
     }
 }
