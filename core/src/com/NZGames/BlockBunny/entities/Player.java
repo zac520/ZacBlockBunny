@@ -13,7 +13,7 @@ public class Player {
     public static final float      WIDTH = 30;
     float           stateTime = 0;
     int             crystalCount = 0;
-
+    public static  int PLAYER_MAX_SPEED = 5;
 
     public Player(Body body){
         this.body = body;

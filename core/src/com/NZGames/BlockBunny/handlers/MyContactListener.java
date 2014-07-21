@@ -42,15 +42,18 @@ public class MyContactListener implements ContactListener {
             //remove crystal
             //since world is updating, we are going to queue the crystals
             //and remove them after the update for each step
-            bodiesToRemove.add(fa.getBody());
+            if(!bodiesToRemove.contains(fa.getBody(),true)) {
+                bodiesToRemove.add(fa.getBody());
+            }
 
         }
         if(fb.getUserData() != null && fb.getUserData().equals("crystal")){
             //remove crystal
             //since world is updating, we are going to queue the crystals
             //and remove them after the update for each step
-            bodiesToRemove.add(fb.getBody());
-
+            if(!bodiesToRemove.contains(fb.getBody(),true)) {
+                bodiesToRemove.add(fb.getBody());
+            }
 
         }
     }

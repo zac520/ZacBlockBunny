@@ -1,5 +1,6 @@
 package com.NZGames.BlockBunny.screens;
 import com.NZGames.BlockBunny.BlockBunnyGame;
+import com.NZGames.BlockBunny.actorHelpers.TestCrystal2;
 import com.NZGames.BlockBunny.entities.Crystal;
 import com.NZGames.BlockBunny.entities.HUD;
 import com.NZGames.BlockBunny.entities.Player;
@@ -24,8 +25,11 @@ import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.*;
 import com.badlogic.gdx.physics.box2d.*;
+import com.badlogic.gdx.scenes.scene2d.Action;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.utils.Array;
+
+import static com.badlogic.gdx.scenes.scene2d.actions.Actions.*;
 
 /**
  * Created by zac520 on 7/17/14.
@@ -33,7 +37,7 @@ import com.badlogic.gdx.utils.Array;
 public class GameScreen implements Screen {
 
     BlockBunnyGame game;
-    private boolean debug = false;
+    private boolean debug = true;
     TextureRegion myGolbez;
 
     Stage stage;
@@ -67,6 +71,7 @@ public class GameScreen implements Screen {
 
     private Array<Crystal> crystals;
     Array<Body> bodies;
+    public Array<Body> testCrystals;
     private float crystalX;
     private float crystalY;
 
@@ -87,6 +92,14 @@ public class GameScreen implements Screen {
         //set the input processor
         Gdx.input.setInputProcessor(new MyInputProcessor());
 
+
+
+        //set up the main camera
+        camera=new OrthographicCamera();
+        camera.setToOrtho(false, BlockBunnyGame.SCREEN_WIDTH, BlockBunnyGame.SCREEN_HEIGHT);
+        stage=new Stage();
+        stage.getViewport().setCamera(camera);
+
         //create a platform
         //createPlatform();
 
@@ -99,16 +112,12 @@ public class GameScreen implements Screen {
         //create crystals
         createCrystals();
 
-        //set up the main camera
-        camera=new OrthographicCamera();
-        camera.setToOrtho(false, BlockBunnyGame.SCREEN_WIDTH, BlockBunnyGame.SCREEN_HEIGHT);
-        stage=new Stage();
-        stage.getViewport().setCamera(camera);
+
 
         //set up the HUD camera
         hudCam = new OrthographicCamera();
         hudCam.setToOrtho(false, BlockBunnyGame.SCREEN_WIDTH, BlockBunnyGame.SCREEN_HEIGHT);
-        
+
         //set up box2d renderer
         box2DRenderer = new Box2DDebugRenderer();
 
@@ -142,6 +151,11 @@ public class GameScreen implements Screen {
         }
         bodies.clear();
 
+        for(int i = 0; i< testCrystals.size; i++){
+            Body b = testCrystals.get(i);
+            b.applyForceToCenter(1,30,true);
+
+        }
 
         //find out if fell off level. reset if true
         if(player.getBody().getPosition().y < 0){
@@ -151,21 +165,25 @@ public class GameScreen implements Screen {
             //start over
             game.setScreen(new GameScreen(game));
         }
+
+        //handle the input from user
+        handleInput();
+
+
+        //update the player
+        player.update(delta);
+
+        //update the stage
+        stage.act();
+        stage.draw();
     }
     @Override
     public void render(float delta) {
         // clear screen
         Gdx.gl20.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        //handle the input from user
-        handleInput();
-
         //update the world
         update(delta);
-
-        //update the player
-        player.update(delta);
-
 
 
         //set camera to follow player
@@ -261,14 +279,17 @@ public class GameScreen implements Screen {
     @Override
     public void dispose(){
         stage.dispose();
-        
+        world.dispose();
+
     }
 
     public void handleInput() {
 
         //handle accelerometer input
         accelx = Gdx.input.getAccelerometerY();
-        player.getBody().applyForceToCenter(accelx*3,0,true);
+        if(Math.abs(player.getBody().getLinearVelocity().x) < Player.PLAYER_MAX_SPEED) {
+            player.getBody().applyForceToCenter(accelx * 2f, 0, true);
+        }
         //set player direction
         if(accelx !=0) {
             if (accelx < 0) {
@@ -285,7 +306,7 @@ public class GameScreen implements Screen {
             //System.out.println("pressed Z");
             if (cl.isPlayerOnGround()) {
                 //force is in newtons
-                player.getBody().applyForceToCenter(0, 250, true);
+                player.getBody().applyForceToCenter(0, 200, true);
                 MyInput.setKey(MyInput.BUTTON1, false);
 
 
@@ -300,13 +321,17 @@ public class GameScreen implements Screen {
         }
 
         if (MyInput.isDown(MyInput.BUTTON3)) {
-            player.getBody().applyForceToCenter(10,0,true);
+            if(Math.abs(player.getBody().getLinearVelocity().x) < Player.PLAYER_MAX_SPEED) {
+                player.getBody().applyForceToCenter(15, 0, true);
+            }
             player.facingLeft = false;
 
         }
 
         if (MyInput.isDown(MyInput.BUTTON4)) {
-            player.getBody().applyForceToCenter(-10,0,true);
+            if(Math.abs(player.getBody().getLinearVelocity().x) < Player.PLAYER_MAX_SPEED) {
+                player.getBody().applyForceToCenter(-15, 0, true);
+            }
             player.facingLeft = true;
         }
 
@@ -462,7 +487,7 @@ public class GameScreen implements Screen {
                 v[4] = v[0];
 
                 cs.createChain(v);
-                fdef.friction = 1;
+                fdef.friction = 1.5f;
                 fdef.shape = cs;
                 fdef.filter.categoryBits = bits;
                 fdef.filter.maskBits = Box2DVars.BIT_PLAYER;//default
@@ -507,7 +532,7 @@ public class GameScreen implements Screen {
     }
     private void createCrystals(){
         crystals = new Array<Crystal>();
-
+        testCrystals = new Array<Body>();
         MapLayer layer = tileMap.getLayers().get("crystals");
         BodyDef bdef = new BodyDef();
         FixtureDef fdef = new FixtureDef();
@@ -564,8 +589,27 @@ public class GameScreen implements Screen {
             Crystal c = new Crystal(body);
             crystals.add(c);
             body.setUserData(c);
-            cshape.dispose();
 
+            //test area.... using actors and stage instead
+            //////////////////////////////////////////////////////////////////////////////////
+            //create crystal, add to stage
+
+            bdef.type = BodyDef.BodyType.DynamicBody;
+            bdef.position.set(100/Box2DVars.PPM,100/Box2DVars.PPM);
+            Body body2 = world.createBody(bdef);
+            body2.createFixture(fdef).setUserData("crystal");
+
+            TestCrystal2 testCrystal2 = new TestCrystal2(body2, this);
+            testCrystal2.setPosition(100, 100);
+            testCrystal2.addAction(moveTo(150,0,1));
+            testCrystals.add(body2);
+
+            stage.addActor(testCrystal2);
+
+            //need to make an array of these crystals, then look
+            //////////////////////////////////////////////////////////////////////////////////
+
+            cshape.dispose();
 
         }
 
