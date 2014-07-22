@@ -35,6 +35,9 @@ public class TestCrystal2 extends Image {
         //set the extended Image class to be a new Texture region of the size of each frame
         super(new TextureRegion(new Texture(Gdx.files.internal("assets/images/crystal.png")),16,16));
 
+        //set the box2d body and the world it lives in
+        this.body = myBody;
+        this.gameScreen = myGameScreen;
 
         //set the bounds equ
         bounds=new Rectangle((int)getX(), (int)getY(), (int)getWidth(), (int)getHeight());
@@ -63,7 +66,9 @@ public class TestCrystal2 extends Image {
     public float getStateTime(){
         return stateTime;
     }
-
+    public Body getBody(){
+        return body;
+    }
     @Override
     public void act(float delta) {
 
@@ -77,6 +82,11 @@ public class TestCrystal2 extends Image {
         myDrawable.setRegion(spinAnimation.getKeyFrame(this.getStateTime(), true));
         this.setDrawable( myDrawable );
 
+        //update the box2dbody
+
+        //this.body.getPosition().set(getX(), getY());
+        //gameScreen.testCrystals.get(gameScreen.testCrystals.indexOf(body,true) ).applyForceToCenter(1f/gameScreen.testCrystals.size,9.81f,false);
+        gameScreen.testCrystals.get(gameScreen.testCrystals.indexOf(body,true)).setTransform(getX()/Box2DVars.PPM,getY()/Box2DVars.PPM,0);
 
     }
 }

@@ -151,12 +151,6 @@ public class GameScreen implements Screen {
         }
         bodies.clear();
 
-        for(int i = 0; i< testCrystals.size; i++){
-            Body b = testCrystals.get(i);
-            b.applyForceToCenter(1,30,true);
-
-        }
-
         //find out if fell off level. reset if true
         if(player.getBody().getPosition().y < 0){
 
@@ -601,7 +595,14 @@ public class GameScreen implements Screen {
 
             TestCrystal2 testCrystal2 = new TestCrystal2(body2, this);
             testCrystal2.setPosition(100, 100);
-            testCrystal2.addAction(moveTo(150,0,1));
+            testCrystal2.addAction(
+                    forever(
+                            sequence(
+                                    moveTo(150,100,1),
+                                    moveTo(100,100,1)
+                            )
+                    )
+            );
             testCrystals.add(body2);
 
             stage.addActor(testCrystal2);
