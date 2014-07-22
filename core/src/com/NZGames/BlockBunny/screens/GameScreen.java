@@ -37,9 +37,9 @@ import static com.badlogic.gdx.scenes.scene2d.actions.Actions.*;
 public class GameScreen implements Screen {
 
     BlockBunnyGame game;
-    private boolean debug = true;
+    private boolean debug = false;
     TextureRegion myGolbez;
-
+    int testCounter = 0;
     Stage stage;
     private SpriteBatch batch;
     private World world;
@@ -74,7 +74,7 @@ public class GameScreen implements Screen {
     public Array<Body> testCrystals;
     private float crystalX;
     private float crystalY;
-
+    private Body tempBody;
 
     //constructor
     public GameScreen(BlockBunnyGame myGame){
@@ -144,9 +144,17 @@ public class GameScreen implements Screen {
         //remove crystals if necessary
         bodies = cl.getBodiesToRemove();
         for(int i = 0; i< bodies.size; i++){
-            Body b = bodies.get(i);
-            crystals.removeValue((Crystal) b.getUserData(), true);
-            world.destroyBody(b);
+            //get the body
+            tempBody = bodies.get(i);
+
+            //use the crystal stored in the UserData to remove from the stage
+            TestCrystal2 tempCrystal = (TestCrystal2) tempBody.getUserData();
+            tempCrystal.remove();
+
+            //destroy the box2d body
+            world.destroyBody(tempBody);
+
+            //add one to the player's crystal count
             player.collectCrystal();
         }
         bodies.clear();
@@ -273,7 +281,6 @@ public class GameScreen implements Screen {
     @Override
     public void dispose(){
         stage.dispose();
-        world.dispose();
 
     }
 
@@ -282,7 +289,7 @@ public class GameScreen implements Screen {
         //handle accelerometer input
         accelx = Gdx.input.getAccelerometerY();
         if(Math.abs(player.getBody().getLinearVelocity().x) < Player.PLAYER_MAX_SPEED) {
-            player.getBody().applyForceToCenter(accelx * 2f, 0, true);
+            player.getBody().applyForceToCenter(accelx * 2.5f, 0, true);
         }
         //set player direction
         if(accelx !=0) {
@@ -300,9 +307,9 @@ public class GameScreen implements Screen {
             //System.out.println("pressed Z");
             if (cl.isPlayerOnGround()) {
                 //force is in newtons
-                player.getBody().applyForceToCenter(0, 200, true);
-                MyInput.setKey(MyInput.BUTTON1, false);
-
+                    player.getBody().setLinearVelocity(player.getBody().getLinearVelocity().x, 3);
+                    //player.getBody().applyForceToCenter(0, 175, true);
+                    MyInput.setKey(MyInput.BUTTON1, false);
 
             }
         }
@@ -535,7 +542,6 @@ public class GameScreen implements Screen {
 
         for (MapObject mo: layer.getObjects()){
 
-            bdef.type = BodyDef.BodyType.StaticBody;
 
 
             if (mo instanceof RectangleMapObject) {
@@ -566,7 +572,7 @@ public class GameScreen implements Screen {
             }
 
 
-
+            bdef.type = BodyDef.BodyType.DynamicBody;
             bdef.position.set(x, y);
 
             CircleShape cshape = new CircleShape();
@@ -580,34 +586,23 @@ public class GameScreen implements Screen {
             Body body = world.createBody(bdef);
             body.createFixture(fdef).setUserData("crystal");
 
-            Crystal c = new Crystal(body);
-            crystals.add(c);
-            body.setUserData(c);
-
             //test area.... using actors and stage instead
             //////////////////////////////////////////////////////////////////////////////////
             //create crystal, add to stage
 
-            bdef.type = BodyDef.BodyType.DynamicBody;
-            bdef.position.set(100/Box2DVars.PPM,100/Box2DVars.PPM);
-            Body body2 = world.createBody(bdef);
-            body2.createFixture(fdef).setUserData("crystal");
-
-            TestCrystal2 testCrystal2 = new TestCrystal2(body2, this);
-            testCrystal2.setPosition(100, 100);
+            TestCrystal2 testCrystal2 = new TestCrystal2(body, this);
+            body.setUserData(testCrystal2);//used to find it again given just the body later
+            testCrystal2.setPosition(x *Box2DVars.PPM, y * Box2DVars.PPM);
             testCrystal2.addAction(
                     forever(
                             sequence(
-                                    moveTo(150,100,1),
-                                    moveTo(100,100,1)
+                                    moveTo(x*Box2DVars.PPM +50,y*Box2DVars.PPM,1),
+                                    moveTo(x*Box2DVars.PPM,y *Box2DVars.PPM ,1)
                             )
                     )
             );
-            testCrystals.add(body2);
-
+            testCrystals.add(body);
             stage.addActor(testCrystal2);
-
-            //need to make an array of these crystals, then look
             //////////////////////////////////////////////////////////////////////////////////
 
             cshape.dispose();
