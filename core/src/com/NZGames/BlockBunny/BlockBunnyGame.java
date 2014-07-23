@@ -1,6 +1,7 @@
 package com.NZGames.BlockBunny;
 
 import com.NZGames.BlockBunny.screens.GameScreen;
+import com.NZGames.BlockBunny.screens.MenuScreen;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
@@ -14,9 +15,9 @@ public class BlockBunnyGame extends Game {
 	@Override
 	public void create () {
         //screen width and height must be set inside method. Does not work above.
-        SCREEN_WIDTH = Gdx.graphics.getWidth()/3;
-        SCREEN_HEIGHT = Gdx.graphics.getHeight()/3;
-        setScreen(new GameScreen(this));
+        //SCREEN_WIDTH = Gdx.graphics.getWidth()/3;
+        //SCREEN_HEIGHT = Gdx.graphics.getHeight()/3;
+        setScreen(new MenuScreen(this));
     }
 
 }

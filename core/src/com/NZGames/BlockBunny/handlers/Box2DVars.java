@@ -14,4 +14,6 @@ public class Box2DVars {
     public static final short BIT_GREEN = 8;
     public static final short BIT_BLUE = 16;
     public static final short BIT_CRYSTAL = 32;
+    public static final short BIT_AWAKE = 64;
+
 }

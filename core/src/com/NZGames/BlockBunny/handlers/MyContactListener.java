@@ -42,8 +42,13 @@ public class MyContactListener implements ContactListener {
             //remove crystal
             //since world is updating, we are going to queue the crystals
             //and remove them after the update for each step
-            if(!bodiesToRemove.contains(fa.getBody(),true)) {
-                bodiesToRemove.add(fa.getBody());
+            //System.out.println("fa is crystal");
+
+            //if we have an intersection, and the intersection is NOT the "awake world", then it must be the player
+            if(fb.getUserData() != null && !fb.getUserData().equals("awake")) {
+                if (!bodiesToRemove.contains(fa.getBody(), true)) {
+                    bodiesToRemove.add(fa.getBody());
+                }
             }
 
         }
@@ -51,9 +56,29 @@ public class MyContactListener implements ContactListener {
             //remove crystal
             //since world is updating, we are going to queue the crystals
             //and remove them after the update for each step
-            if(!bodiesToRemove.contains(fb.getBody(),true)) {
-                bodiesToRemove.add(fb.getBody());
+            if(fa.getUserData() != null && !fa.getUserData().equals("awake")) {
+                if (!bodiesToRemove.contains(fb.getBody(), true)) {
+                    bodiesToRemove.add(fb.getBody());
+                }
             }
+
+        }
+
+        if(fa.getUserData() != null && fa.getUserData().equals("awake")){
+            //remove crystal
+            //since world is updating, we are going to queue the crystals
+            //and remove them after the update for each step
+            //System.out.println("awakening body");
+            fb.getBody().setAwake(true);
+
+        }
+        if(fb.getUserData() != null && fb.getUserData().equals("awake")){
+            //remove crystal
+            //since world is updating, we are going to queue the crystals
+            //and remove them after the update for each step
+            //System.out.println("awakening body");
+            fa.getBody().setAwake(true);
+
 
         }
     }
@@ -76,7 +101,21 @@ public class MyContactListener implements ContactListener {
             numFootContacts --;
         }
 
+        if(fa.getUserData() != null && fa.getUserData().equals("awake")){
+            //remove crystal
+            //since world is updating, we are going to queue the crystals
+            //and remove them after the update for each step
+            fb.getBody().setAwake(false);
 
+        }
+        if(fb.getUserData() != null && fb.getUserData().equals("awake")){
+            //remove crystal
+            //since world is updating, we are going to queue the crystals
+            //and remove them after the update for each step
+            fa.getBody().setAwake(false);
+
+
+        }
     }
 
     //collision detection

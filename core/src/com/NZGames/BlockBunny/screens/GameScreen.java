@@ -1,6 +1,6 @@
 package com.NZGames.BlockBunny.screens;
 import com.NZGames.BlockBunny.BlockBunnyGame;
-import com.NZGames.BlockBunny.actorHelpers.TestCrystal2;
+import com.NZGames.BlockBunny.entities.BatEnemy;
 import com.NZGames.BlockBunny.entities.Crystal;
 import com.NZGames.BlockBunny.entities.HUD;
 import com.NZGames.BlockBunny.entities.Player;
@@ -18,6 +18,7 @@ import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.maps.MapLayer;
 import com.badlogic.gdx.maps.MapObject;
+import com.badlogic.gdx.maps.MapProperties;
 import com.badlogic.gdx.maps.objects.*;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
@@ -25,9 +26,12 @@ import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.*;
 import com.badlogic.gdx.physics.box2d.*;
-import com.badlogic.gdx.scenes.scene2d.Action;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.utils.Array;
+import javafx.beans.property.MapProperty;
+import jdk.nashorn.internal.ir.Block;
+
+import java.lang.management.ThreadMXBean;
 
 import static com.badlogic.gdx.scenes.scene2d.actions.Actions.*;
 
@@ -75,9 +79,13 @@ public class GameScreen implements Screen {
     private float crystalX;
     private float crystalY;
     private Body tempBody;
+    String tileMapLocation;
+
+
 
     //constructor
-    public GameScreen(BlockBunnyGame myGame){
+    public GameScreen(BlockBunnyGame myGame, String myTileMapLocation){
+        tileMapLocation = myTileMapLocation;
         game = myGame;
         batch = new SpriteBatch();
 
@@ -100,6 +108,7 @@ public class GameScreen implements Screen {
         stage=new Stage();
         stage.getViewport().setCamera(camera);
 
+
         //create a platform
         //createPlatform();
 
@@ -112,7 +121,8 @@ public class GameScreen implements Screen {
         //create crystals
         createCrystals();
 
-
+        //create enemies
+        //createBatEnemies();
 
         //set up the HUD camera
         hudCam = new OrthographicCamera();
@@ -148,7 +158,7 @@ public class GameScreen implements Screen {
             tempBody = bodies.get(i);
 
             //use the crystal stored in the UserData to remove from the stage
-            TestCrystal2 tempCrystal = (TestCrystal2) tempBody.getUserData();
+            Crystal tempCrystal = (Crystal) tempBody.getUserData();
             tempCrystal.remove();
 
             //destroy the box2d body
@@ -163,9 +173,9 @@ public class GameScreen implements Screen {
         if(player.getBody().getPosition().y < 0){
 
             //trash everything
-            dispose();
-            //start over
-            game.setScreen(new GameScreen(game));
+            //dispose();
+            //go back to menu
+            game.setScreen(new MenuScreen(game));
         }
 
         //handle the input from user
@@ -222,21 +232,6 @@ public class GameScreen implements Screen {
 
 
 
-
-
-        //draw crystals
-        for(int i = 0; i<crystals.size; i++){
-            //get the coordinates of this crystal
-            crystalX = crystals.get(i).getBody().getPosition().x * Box2DVars.PPM;
-            crystalY = crystals.get(i).getBody().getPosition().y* Box2DVars.PPM;
-
-            //draw this crystal
-            batch.begin();
-            batch.draw(crystals.get(i).crystalAnimation.getKeyFrame(player.getStateTime(), true), crystalX, crystalY);
-            batch.end();
-        }
-
-
         //draw hud
         batch.setProjectionMatrix(hudCam.combined);
         hud.render(batch);
@@ -280,7 +275,10 @@ public class GameScreen implements Screen {
 
     @Override
     public void dispose(){
-        stage.dispose();
+        //stage.dispose();
+        //batch.dispose();
+
+
 
     }
 
@@ -288,9 +286,19 @@ public class GameScreen implements Screen {
 
         //handle accelerometer input
         accelx = Gdx.input.getAccelerometerY();
-        if(Math.abs(player.getBody().getLinearVelocity().x) < Player.PLAYER_MAX_SPEED) {
-            player.getBody().applyForceToCenter(accelx * 2.5f, 0, true);
+        //player.getBody().applyForceToCenter(accelx * 2.5f, 0, true);
+        if(accelx >0.3){
+            if(player.getBody().getLinearVelocity().x < Player.PLAYER_MAX_SPEED) {
+                player.getBody().applyForceToCenter(12, 0, true);
+            }
         }
+        else if (accelx < -0.3){
+            if(player.getBody().getLinearVelocity().x > -Player.PLAYER_MAX_SPEED) {
+                player.getBody().applyForceToCenter(-12, 0, true);
+            }
+        }
+
+
         //set player direction
         if(accelx !=0) {
             if (accelx < 0) {
@@ -307,7 +315,7 @@ public class GameScreen implements Screen {
             //System.out.println("pressed Z");
             if (cl.isPlayerOnGround()) {
                 //force is in newtons
-                    player.getBody().setLinearVelocity(player.getBody().getLinearVelocity().x, 3);
+                    player.getBody().setLinearVelocity(player.getBody().getLinearVelocity().x, 4f);
                     //player.getBody().applyForceToCenter(0, 175, true);
                     MyInput.setKey(MyInput.BUTTON1, false);
 
@@ -322,16 +330,18 @@ public class GameScreen implements Screen {
         }
 
         if (MyInput.isDown(MyInput.BUTTON3)) {
-            if(Math.abs(player.getBody().getLinearVelocity().x) < Player.PLAYER_MAX_SPEED) {
-                player.getBody().applyForceToCenter(15, 0, true);
+            if(player.getBody().getLinearVelocity().x < Player.PLAYER_MAX_SPEED) {
+                player.getBody().applyForceToCenter(12, 0, true);
+
             }
             player.facingLeft = false;
 
         }
 
         if (MyInput.isDown(MyInput.BUTTON4)) {
-            if(Math.abs(player.getBody().getLinearVelocity().x) < Player.PLAYER_MAX_SPEED) {
-                player.getBody().applyForceToCenter(-15, 0, true);
+            if(player.getBody().getLinearVelocity().x > -Player.PLAYER_MAX_SPEED) {
+                player.getBody().applyForceToCenter(-12, 0, true);
+
             }
             player.facingLeft = true;
         }
@@ -373,7 +383,6 @@ public class GameScreen implements Screen {
         shape.setAsBox((game.SCREEN_WIDTH / Box2DVars.PPM) /2, 5 / Box2DVars.PPM);
         FixtureDef fdef = new FixtureDef();
         fdef.shape = shape;
-        fdef.friction = 1;
 
         //fdef.filter.categoryBits = B2DVars.BIT_GROUND; //what it is
         //fdef.filter.maskBits = Box2DVars.BIT_PLAYER;//what it can collide with (bitwise operators)
@@ -417,6 +426,11 @@ public class GameScreen implements Screen {
         fdef.isSensor = true;//make the foot go through ground for easier contact determining
         body.createFixture(fdef).setUserData("foot");
 
+        //create a box around the player to wake sleeping box2d objects
+        shape.setAsBox(BlockBunnyGame.SCREEN_WIDTH/Box2DVars.PPM, BlockBunnyGame.SCREEN_HEIGHT /Box2DVars.PPM);
+        fdef.shape = shape;
+        fdef.isSensor = true;
+        body.createFixture(fdef).setUserData("awake");
 
 
         shape.dispose();
@@ -426,21 +440,26 @@ public class GameScreen implements Screen {
     public void createTiles(){
         /////////////////////////////////////////////////////////////////////
         // load tile map
-        tileMap = new TmxMapLoader().load("assets/maps/test3.tmx");
+        tileMap = new TmxMapLoader().load(tileMapLocation);
         tmr = new OrthogonalTiledMapRenderer(tileMap);
 
         tileSize = tileMap.getProperties().get("tilewidth", Integer.class);
 
         TiledMapTileLayer layer;
         layer = (TiledMapTileLayer) tileMap.getLayers().get("blue");
-        createLayer(layer, Box2DVars.BIT_BLUE);
+        if(layer!=null) {
+            createLayer(layer, Box2DVars.BIT_BLUE);
+        }
 
         layer = (TiledMapTileLayer) tileMap.getLayers().get("green");
-        createLayer(layer, Box2DVars.BIT_GREEN);
+        if(layer!=null) {
+            createLayer(layer, Box2DVars.BIT_GREEN);
+        }
 
         layer = (TiledMapTileLayer) tileMap.getLayers().get("red");
-        createLayer(layer, Box2DVars.BIT_RED);
-
+        if(layer!=null) {
+            createLayer(layer, Box2DVars.BIT_RED);
+        }
 
     }
     public void createLayer(TiledMapTileLayer layer, short bits){
@@ -488,11 +507,11 @@ public class GameScreen implements Screen {
                 v[4] = v[0];
 
                 cs.createChain(v);
-                fdef.friction = 1.5f;
                 fdef.shape = cs;
                 fdef.filter.categoryBits = bits;
                 fdef.filter.maskBits = Box2DVars.BIT_PLAYER;//default
                 fdef.isSensor = false;
+                fdef.friction = 0.5f;
                 world.createBody(bdef).createFixture(fdef);
                 cs.dispose();
             }
@@ -540,32 +559,111 @@ public class GameScreen implements Screen {
         float x=0;
         float y=0;
 
+//        MapProperties   prop = tileMap.getProperties();
+//        float mapWidth = prop.get("width", Integer.class);//gives the width in blocks
+//        mapWidth = mapWidth * prop.get("tilewidth", Integer.class); //multiply by width of blocks
+
+
         for (MapObject mo: layer.getObjects()){
 
+                if (mo instanceof RectangleMapObject) {
+                    Rectangle rect = ((RectangleMapObject) mo).getRectangle();
+                    x = rect.x / Box2DVars.PPM;
+                    y = rect.y / Box2DVars.PPM;
+                } else if (mo instanceof PolygonMapObject) {
+                    Polygon polygon = ((PolygonMapObject) mo).getPolygon();
+                    //these are not right for this shape, but just a starter for if I need it
+//                x = polygon.x / Box2DVars.PPM;
+//                y = polygon.y / Box2DVars.PPM;
+                } else if (mo instanceof PolylineMapObject) {
+                    Polyline chain = ((PolylineMapObject) mo).getPolyline();
+//                x = chain.x / Box2DVars.PPM;
+//                y = chain.y / Box2DVars.PPM;
+                } else if (mo instanceof CircleMapObject) {
+                    Circle circle = ((CircleMapObject) mo).getCircle();
+                    x = circle.x / Box2DVars.PPM;
+                    y = circle.y / Box2DVars.PPM;
+                } else if (mo instanceof EllipseMapObject) {
+                    Ellipse ellipse = ((EllipseMapObject) mo).getEllipse();
+                    x = ellipse.x / Box2DVars.PPM;
+                    y = ellipse.y / Box2DVars.PPM;
+                }
 
+
+                bdef.type = BodyDef.BodyType.DynamicBody;
+                bdef.allowSleep = true;
+                bdef.awake = false;
+                bdef.position.set(x, y);
+
+                CircleShape cshape = new CircleShape();
+                cshape.setRadius(8 / Box2DVars.PPM);
+
+                fdef.shape = cshape;
+                fdef.isSensor = true;
+                fdef.filter.categoryBits = Box2DVars.BIT_CRYSTAL;
+                fdef.filter.maskBits = Box2DVars.BIT_PLAYER | Box2DVars.BIT_AWAKE;
+
+                Body body = world.createBody(bdef);
+                body.createFixture(fdef).setUserData("crystal");
+
+                //test area.... using actors and stage instead
+                //////////////////////////////////////////////////////////////////////////////////
+                //create crystal, add to stage
+
+                Crystal crystal = new Crystal(body, this);
+                body.setUserData(crystal);//used to find it again given just the body later
+                crystal.setPosition(x * Box2DVars.PPM, y * Box2DVars.PPM);
+                crystal.addAction(
+                        forever(
+                                sequence(
+                                        moveTo(x * Box2DVars.PPM + 50, y * Box2DVars.PPM, 1),
+                                        moveTo(x * Box2DVars.PPM, y * Box2DVars.PPM, 1)
+                                )
+                        )
+                );
+                testCrystals.add(body);
+                stage.addActor(crystal);
+                //////////////////////////////////////////////////////////////////////////////////
+                cshape.dispose();
+            }
+
+
+    }
+
+    private void createBatEnemies(){
+        crystals = new Array<Crystal>();
+        testCrystals = new Array<Body>();
+        MapLayer layer = tileMap.getLayers().get("enemies");
+        BodyDef bdef = new BodyDef();
+        FixtureDef fdef = new FixtureDef();
+        float x=0;
+        float y=0;
+
+//        MapProperties   prop = tileMap.getProperties();
+//        float mapWidth = prop.get("width", Integer.class);//gives the width in blocks
+//        mapWidth = mapWidth * prop.get("tilewidth", Integer.class); //multiply by width of blocks
+
+
+        for (MapObject mo: layer.getObjects()){
 
             if (mo instanceof RectangleMapObject) {
                 Rectangle rect = ((RectangleMapObject) mo).getRectangle();
                 x = rect.x / Box2DVars.PPM;
                 y = rect.y / Box2DVars.PPM;
-            }
-            else if (mo instanceof PolygonMapObject) {
+            } else if (mo instanceof PolygonMapObject) {
                 Polygon polygon = ((PolygonMapObject) mo).getPolygon();
                 //these are not right for this shape, but just a starter for if I need it
 //                x = polygon.x / Box2DVars.PPM;
 //                y = polygon.y / Box2DVars.PPM;
-            }
-            else if (mo instanceof PolylineMapObject) {
+            } else if (mo instanceof PolylineMapObject) {
                 Polyline chain = ((PolylineMapObject) mo).getPolyline();
 //                x = chain.x / Box2DVars.PPM;
 //                y = chain.y / Box2DVars.PPM;
-            }
-            else if (mo instanceof CircleMapObject) {
+            } else if (mo instanceof CircleMapObject) {
                 Circle circle = ((CircleMapObject) mo).getCircle();
                 x = circle.x / Box2DVars.PPM;
                 y = circle.y / Box2DVars.PPM;
-            }
-            else if (mo instanceof EllipseMapObject) {
+            } else if (mo instanceof EllipseMapObject) {
                 Ellipse ellipse = ((EllipseMapObject) mo).getEllipse();
                 x = ellipse.x / Box2DVars.PPM;
                 y = ellipse.y / Box2DVars.PPM;
@@ -573,41 +671,44 @@ public class GameScreen implements Screen {
 
 
             bdef.type = BodyDef.BodyType.DynamicBody;
+            bdef.allowSleep = true;
+            bdef.awake = false;
             bdef.position.set(x, y);
 
             CircleShape cshape = new CircleShape();
-            cshape.setRadius(8/Box2DVars.PPM);
+            cshape.setRadius(8 / Box2DVars.PPM);
 
             fdef.shape = cshape;
             fdef.isSensor = true;
             fdef.filter.categoryBits = Box2DVars.BIT_CRYSTAL;
-            fdef.filter.maskBits = Box2DVars.BIT_PLAYER;
+            fdef.filter.maskBits = Box2DVars.BIT_PLAYER | Box2DVars.BIT_AWAKE;
 
             Body body = world.createBody(bdef);
-            body.createFixture(fdef).setUserData("crystal");
+            body.createFixture(fdef).setUserData("bat");
 
             //test area.... using actors and stage instead
             //////////////////////////////////////////////////////////////////////////////////
             //create crystal, add to stage
 
-            TestCrystal2 testCrystal2 = new TestCrystal2(body, this);
-            body.setUserData(testCrystal2);//used to find it again given just the body later
-            testCrystal2.setPosition(x *Box2DVars.PPM, y * Box2DVars.PPM);
-            testCrystal2.addAction(
+            BatEnemy enemy = new BatEnemy(body, this);
+            body.setUserData(enemy);//used to find it again given just the body later
+            enemy.setPosition(x * Box2DVars.PPM, y * Box2DVars.PPM);
+            enemy.addAction(
                     forever(
                             sequence(
-                                    moveTo(x*Box2DVars.PPM +50,y*Box2DVars.PPM,1),
-                                    moveTo(x*Box2DVars.PPM,y *Box2DVars.PPM ,1)
+                                    moveTo(x * Box2DVars.PPM + 50, y * Box2DVars.PPM, 1),
+                                    moveTo(x * Box2DVars.PPM, y * Box2DVars.PPM, 1)
                             )
                     )
             );
-            testCrystals.add(body);
-            stage.addActor(testCrystal2);
+            //testCrystals.add(body);
+            stage.addActor(enemy);
             //////////////////////////////////////////////////////////////////////////////////
-
             cshape.dispose();
-
         }
 
+
     }
+
+
 }

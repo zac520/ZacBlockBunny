@@ -11,6 +11,7 @@ public class Player {
     public boolean  isWalking = false;
     public static final float      HEIGHT = 40;
     public static final float      WIDTH = 30;
+    public static final float       DAMP_EFFECT = 0.0f;
     float           stateTime = 0;
     int             crystalCount = 0;
     public static  int PLAYER_MAX_SPEED = 3;
