@@ -84,8 +84,10 @@ public class Crystal extends Image {
         //this.body.getPosition().set(getX(), getY());
         //gameScreen.testCrystals.get(gameScreen.testCrystals.indexOf(body,true) ).applyForceToCenter(1f/gameScreen.testCrystals.size,9.81f,false);
         if(gameScreen.testCrystals.get(gameScreen.testCrystals.indexOf(body,true)).isAwake()) {
-            gameScreen.testCrystals.get(gameScreen.testCrystals.indexOf(body, true)).setTransform(getX() / Box2DVars.PPM, getY() / Box2DVars.PPM, 0);
-            //gameScreen.testCrystals.get(gameScreen.testCrystals.indexOf(body, true)).setAwake(false);
+            gameScreen.testCrystals.get(gameScreen.testCrystals.indexOf(body, true)).setTransform(
+                    (getX() + (getWidth()/2)) / Box2DVars.PPM,
+                    (getY() + (getHeight() /2)) / Box2DVars.PPM,
+                    0);            //gameScreen.testCrystals.get(gameScreen.testCrystals.indexOf(body, true)).setAwake(false);
         }
     }
 }

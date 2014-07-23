@@ -11,7 +11,7 @@ public class MyContactListener implements ContactListener {
     private boolean playerOnGround;
     private int numFootContacts =0;
     private Array<Body> bodiesToRemove;
-
+    private boolean playerHitEnemy = false;
     public MyContactListener(){
         super();
         bodiesToRemove = new Array<Body>();
@@ -64,22 +64,33 @@ public class MyContactListener implements ContactListener {
 
         }
 
-        if(fa.getUserData() != null && fa.getUserData().equals("awake")){
-            //remove crystal
-            //since world is updating, we are going to queue the crystals
-            //and remove them after the update for each step
-            //System.out.println("awakening body");
-            fb.getBody().setAwake(true);
+
+        //handle the spike collision
+        if(fa.getUserData() != null && fa.getUserData().equals("spike")){
+
+
+            //if we have an intersection, and the intersection is NOT the "awake world", then it must be the player
+            if(fb.getUserData() != null && !fb.getUserData().equals("awake")) {
+                playerHitEnemy = true;
+            }
 
         }
+        if(fb.getUserData() != null && fb.getUserData().equals("spike")){
+
+            if(fa.getUserData() != null && !fa.getUserData().equals("awake")) {
+                playerHitEnemy = true;
+            }
+
+        }
+
+
+        //wake up the box2d body
+        if(fa.getUserData() != null && fa.getUserData().equals("awake")){
+
+            fb.getBody().setAwake(true);
+        }
         if(fb.getUserData() != null && fb.getUserData().equals("awake")){
-            //remove crystal
-            //since world is updating, we are going to queue the crystals
-            //and remove them after the update for each step
-            //System.out.println("awakening body");
             fa.getBody().setAwake(true);
-
-
         }
     }
 
@@ -113,8 +124,6 @@ public class MyContactListener implements ContactListener {
             //since world is updating, we are going to queue the crystals
             //and remove them after the update for each step
             fa.getBody().setAwake(false);
-
-
         }
     }
 
@@ -128,6 +137,11 @@ public class MyContactListener implements ContactListener {
     public boolean isPlayerOnGround(){
         //if there is at least one, then player is on ground. Not sure why that is better than the bool method
         return numFootContacts >0;
+    }
+
+    public boolean didPlayerHitEnemy(){
+        //if there is at least one, then player is on ground. Not sure why that is better than the bool method
+        return playerHitEnemy;
     }
     public Array getBodiesToRemove(){
         return bodiesToRemove;

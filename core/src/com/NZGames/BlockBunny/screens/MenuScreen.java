@@ -97,8 +97,8 @@ public class MenuScreen implements Screen {
             @Override
             public void clicked(InputEvent event, float x, float y) {
 
-
-                game.setScreen(new GameScreen(game, "assets/maps/easyLevel.tmx"));
+                GameScreen gameScreen = new GameScreen(game, "assets/maps/easyLevel.tmx");
+                game.setScreen(gameScreen);
             }
         });
         table.add(startGame).width(200).height(50);

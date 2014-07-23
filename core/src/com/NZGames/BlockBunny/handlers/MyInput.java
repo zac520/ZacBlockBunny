@@ -35,4 +35,11 @@ public class MyInput {
     public static boolean isPressed(int i){
         return keys[i] && !pkeys[i];
     }
+
+    public static void resetKeys(){
+        for (int i = 0; i < NUM_KEYS; i++){
+            pkeys[i] = false;
+            keys[i] = false;
+        }
+    }
 }

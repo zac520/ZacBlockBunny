@@ -14,21 +14,22 @@ import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 /**
  * Created by zac520 on 7/21/14.
  */
-public class BatEnemy extends Image {
+public class SpikeEnemy extends Image {
     float CRYSTAL_FRAME_DURATION= 0.06f;
     Rectangle bounds;
     private float stateTime;
-    private Animation spinAnimation;
+    private Animation rightAnimation;
+    private Animation leftAnimation;
     private Texture tex;
     private GameScreen gameScreen;
     TextureRegionDrawable myDrawable;
     protected Body body;
+    private boolean facingRight = true;
 
-    public BatEnemy(Body myBody, GameScreen myGameScreen) {
+    public SpikeEnemy(Body myBody, GameScreen myGameScreen) {
 
         //set the extended Image class to be a new Texture region of the size of each frame
-        //super(new TextureRegion(new Texture(Gdx.files.internal("assets/images/bat_enemy.png")),16,16));
-        tex = new Texture(Gdx.files.internal("assets/images/crystal.png"));
+        super(new TextureRegion(new Texture(Gdx.files.internal("assets/images/spikes.png")),32,32));
 
         //set the box2d body and the world it lives in
         this.body = myBody;
@@ -38,13 +39,14 @@ public class BatEnemy extends Image {
         bounds=new Rectangle((int)getX(), (int)getY(), (int)getWidth(), (int)getHeight());
 
         //split that picture into pieces to use for animation
-        tex = new Texture(Gdx.files.internal("assets/images/crystal.png"));
+        tex = new Texture(Gdx.files.internal("assets/images/spikes.png"));
 
-        TextureRegion[] sprites = TextureRegion.split(tex, 16, 16)[0];
 
-        spinAnimation = new Animation(CRYSTAL_FRAME_DURATION,sprites);
+        TextureRegion[] rightSprites = TextureRegion.split(tex, 32, 32)[0];
 
-        myDrawable = new TextureRegionDrawable(spinAnimation.getKeyFrame(this.getStateTime(), true));
+        rightAnimation = new Animation(CRYSTAL_FRAME_DURATION,rightSprites);
+
+        myDrawable = new TextureRegionDrawable(rightAnimation.getKeyFrame(this.getStateTime(), true));
 
     }
 
@@ -72,15 +74,19 @@ public class BatEnemy extends Image {
         this.update(delta);
 
         //change the drawable to the current frame
-        myDrawable.setRegion(spinAnimation.getKeyFrame(this.getStateTime(), true));
-        this.setDrawable( myDrawable );
+        myDrawable.setRegion(rightAnimation.getKeyFrame(this.getStateTime(), true));
+        this.setDrawable(myDrawable);
+
 
         //update the box2dbody
 
         //this.body.getPosition().set(getX(), getY());
         //gameScreen.testCrystals.get(gameScreen.testCrystals.indexOf(body,true) ).applyForceToCenter(1f/gameScreen.testCrystals.size,9.81f,false);
-        if(gameScreen.testCrystals.get(gameScreen.testCrystals.indexOf(body,true)).isAwake()) {
-            gameScreen.testCrystals.get(gameScreen.testCrystals.indexOf(body, true)).setTransform(getX() / Box2DVars.PPM, getY() / Box2DVars.PPM, 0);
+        if(gameScreen.enemies.get(gameScreen.enemies.indexOf(body,true)).isAwake()) {
+            gameScreen.enemies.get(gameScreen.enemies.indexOf(body, true)).setTransform(
+                    (getX() + (getWidth()/2)) / Box2DVars.PPM,
+                    (getY() + (getHeight() /2)) / Box2DVars.PPM,
+                    0);
             //gameScreen.testCrystals.get(gameScreen.testCrystals.indexOf(body, true)).setAwake(false);
         }
     }
