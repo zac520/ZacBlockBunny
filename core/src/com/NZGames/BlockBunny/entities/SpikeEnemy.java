@@ -11,6 +11,8 @@ import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 
+import static com.badlogic.gdx.scenes.scene2d.actions.Actions.*;
+
 /**
  * Created by zac520 on 7/21/14.
  */
@@ -26,7 +28,7 @@ public class SpikeEnemy extends Image {
     protected Body body;
     private boolean facingRight = true;
 
-    public SpikeEnemy(Body myBody, GameScreen myGameScreen) {
+    public SpikeEnemy(Body myBody, GameScreen myGameScreen, boolean standardMovement) {
 
         //set the extended Image class to be a new Texture region of the size of each frame
         super(new TextureRegion(new Texture(Gdx.files.internal("assets/images/spikes.png")),32,32));
@@ -38,19 +40,36 @@ public class SpikeEnemy extends Image {
         //set the bounds equ
         bounds=new Rectangle((int)getX(), (int)getY(), (int)getWidth(), (int)getHeight());
 
-        //split that picture into pieces to use for animation
+        //grab the texture
         tex = new Texture(Gdx.files.internal("assets/images/spikes.png"));
 
-
+        //split that picture into pieces to use for animation
         TextureRegion[] rightSprites = TextureRegion.split(tex, 32, 32)[0];
 
+        //set the animation
         rightAnimation = new Animation(CRYSTAL_FRAME_DURATION,rightSprites);
 
+        //set the current drawable to the animation
         myDrawable = new TextureRegionDrawable(rightAnimation.getKeyFrame(this.getStateTime(), true));
 
+        //set up the action that spikes make
+        if(standardMovement) {
+            addMovement();
+        }
     }
 
-
+    private void addMovement(){
+        this.addAction(
+                forever(
+                        sequence(
+                                moveTo(body.getPosition().x  * Box2DVars.PPM + 50, body.getPosition().y * Box2DVars.PPM + 50, 1),
+                                moveTo(body.getPosition().x  * Box2DVars.PPM + 100, body.getPosition().y * Box2DVars.PPM, 1),
+                                moveTo(body.getPosition().x  * Box2DVars.PPM + 50, body.getPosition().y * Box2DVars.PPM - 50, 1),
+                                moveTo(body.getPosition().x  * Box2DVars.PPM, body.getPosition().y * Box2DVars.PPM, 1)
+                        )
+                )
+        );
+    }
     public Rectangle getBounds(){
         return bounds;
     }

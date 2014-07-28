@@ -10,8 +10,8 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 public class BlockBunnyGame extends Game {
-    public static int SCREEN_WIDTH = 320;
-    public static int SCREEN_HEIGHT = 240;
+    public static int SCREEN_WIDTH = 320*2;
+    public static int SCREEN_HEIGHT = 240*2;
 	@Override
 	public void create () {
         //screen width and height must be set inside method. Does not work above.

@@ -36,7 +36,7 @@ import static com.badlogic.gdx.scenes.scene2d.actions.Actions.*;
 public class GameScreen implements Screen {
 
     BlockBunnyGame game;
-    private boolean debug = false;
+    private boolean debug = true;
     TextureRegion myGolbez;
     int testCounter = 0;
     Stage stage;
@@ -291,12 +291,12 @@ public class GameScreen implements Screen {
         //player.getBody().applyForceToCenter(accelx * 2.5f, 0, true);
         if(accelx >0.3){
             if(player.getBody().getLinearVelocity().x < Player.PLAYER_MAX_SPEED) {
-                player.getBody().applyForceToCenter(12, 0, true);
+                player.getBody().applyForceToCenter(Player.FORWARD_FORCE, 0, true);
             }
         }
         else if (accelx < -0.3){
             if(player.getBody().getLinearVelocity().x > -Player.PLAYER_MAX_SPEED) {
-                player.getBody().applyForceToCenter(-12, 0, true);
+                player.getBody().applyForceToCenter(-Player.FORWARD_FORCE, 0, true);
             }
         }
 
@@ -333,7 +333,7 @@ public class GameScreen implements Screen {
 
         if (MyInput.isDown(MyInput.BUTTON3)) {
             if(player.getBody().getLinearVelocity().x < Player.PLAYER_MAX_SPEED) {
-                player.getBody().applyForceToCenter(12, 0, true);
+                player.getBody().applyForceToCenter(Player.FORWARD_FORCE, 0, true);
 
             }
             player.facingLeft = false;
@@ -342,7 +342,7 @@ public class GameScreen implements Screen {
 
         if (MyInput.isDown(MyInput.BUTTON4)) {
             if(player.getBody().getLinearVelocity().x > -Player.PLAYER_MAX_SPEED) {
-                player.getBody().applyForceToCenter(-12, 0, true);
+                player.getBody().applyForceToCenter(-Player.FORWARD_FORCE, 0, true);
 
             }
             player.facingLeft = true;
@@ -395,7 +395,7 @@ public class GameScreen implements Screen {
 
     }
     public void createPlayer() {
-//create player
+        //create player
         //define platform body
         BodyDef bdef = new BodyDef();
         bdef.position.set(75 / Box2DVars.PPM, 200 / Box2DVars.PPM);
@@ -690,19 +690,10 @@ public class GameScreen implements Screen {
                 //////////////////////////////////////////////////////////////////////////////////
                 //create crystal, add to stage
 
-                SpikeEnemy enemy = new SpikeEnemy(body, this);
+                SpikeEnemy enemy = new SpikeEnemy(body, this, false);
                 body.setUserData(enemy);//used to find it again given just the body later
                 enemy.setPosition(x * Box2DVars.PPM, y * Box2DVars.PPM);
-                enemy.addAction(
-                        forever(
-                                sequence(
-                                        moveTo(x * Box2DVars.PPM + 50, y * Box2DVars.PPM + 50, 1),
-                                        moveTo(x * Box2DVars.PPM + 100, y * Box2DVars.PPM, 1),
-                                        moveTo(x * Box2DVars.PPM + 50, y * Box2DVars.PPM - 50, 1),
-                                        moveTo(x * Box2DVars.PPM, y * Box2DVars.PPM, 1)
-                                )
-                        )
-                );
+
                 enemies.add(body);
 
                 stage.addActor(enemy);

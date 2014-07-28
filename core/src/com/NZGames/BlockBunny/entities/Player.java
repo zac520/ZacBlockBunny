@@ -15,6 +15,7 @@ public class Player {
     float           stateTime = 0;
     int             crystalCount = 0;
     public static  int PLAYER_MAX_SPEED = 3;
+    public static int FORWARD_FORCE = 8;
 
     public Player(Body body){
         this.body = body;
